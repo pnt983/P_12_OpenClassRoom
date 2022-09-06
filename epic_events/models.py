@@ -11,7 +11,7 @@ class User(AbstractUser):
 
     first_name = models.CharField(max_length=25)
     last_name = models.CharField(max_length=25)
-    username = models.CharField(max_length=250, unique=True)
+    username = models.CharField(max_length=60, unique=True)
     password = models.CharField(max_length=250)
     is_staff = models.BooleanField(default=False)
     role = models.CharField(max_length=25, choices=role)
@@ -25,8 +25,7 @@ class Customer(models.Model):
     last_name = models.CharField(max_length=25)
     company_name = models.CharField(max_length=250)
     email = models.EmailField(max_length=100, unique=True)
-    phoneNumberRegex = RegexValidator(regex=r"^\+?1?\d{8,15}$")   # A regler
-    phoneNumber = models.CharField(validators=[phoneNumberRegex], max_length=10, unique=True)
+    phoneNumber = models.CharField(max_length=10, unique=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     sales_contact = models.ForeignKey(User, on_delete=models.CASCADE)
