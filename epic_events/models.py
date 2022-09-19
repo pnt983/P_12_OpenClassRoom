@@ -4,9 +4,9 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
 
-    role = [('Managements', 'Managements'),
-            ('Sales', 'Sales'),
-            ('Supports', 'Supports')]
+    role = [('Management', 'Management'),
+            ('Sale', 'Sale'),
+            ('Support', 'Support')]
 
     first_name = models.CharField(max_length=25)
     last_name = models.CharField(max_length=25)
@@ -18,13 +18,17 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    # def admin_connection(self):
+    #     if self.role == 'Managements':
+    #         return True
+
 
 class Customer(models.Model):
     first_name = models.CharField(max_length=25)
     last_name = models.CharField(max_length=25)
     company_name = models.CharField(max_length=250)
     email = models.EmailField(max_length=100, unique=True)
-    phoneNumber = models.CharField(max_length=10, unique=True, blank=True)
+    phoneNumber = models.CharField(max_length=10, blank=True)
     is_client = models.BooleanField(default=False)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)

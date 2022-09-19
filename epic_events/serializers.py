@@ -26,7 +26,7 @@ class ContractSerializer(ModelSerializer):
 
     class Meta:
         model = Contract
-        fields = ['sales_contact', 'client', 'status', 'amount', 'payment_due']
+        fields = ['sales_contact', 'client', 'amount', 'payment_due']
 
 
 class StatusEventSerializer(ModelSerializer):

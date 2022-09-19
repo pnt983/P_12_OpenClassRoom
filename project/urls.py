@@ -19,10 +19,16 @@ from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_nested import routers
 
-from epic_events.views import SignupUserView, CustomerView
+from epic_events.views import SignupUserView, CustomerView, ContractView, EventView
 
 router = routers.SimpleRouter()
 router.register(r'customers', CustomerView, basename="customers")
+
+router_contract = routers.SimpleRouter()
+router_contract.register(r'contracts', ContractView, basename="contracts")
+
+router_event = routers.SimpleRouter()
+router_event.register(r'events', EventView, basename="events")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -30,4 +36,6 @@ urlpatterns = [
     path('api/login/', TokenObtainPairView.as_view(), name='login'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/', include(router.urls)),
+    path('api/', include(router_contract.urls)),
+    path('api/', include(router_event.urls)),
 ]
