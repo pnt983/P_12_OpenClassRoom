@@ -1,13 +1,16 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status, filters
 import logging
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .serializers import SignupUserSerializer, CustomerSerializer, ContractSerializer, EventSerializer
 from .models import User, Customer, Contract, Event
 from .permissions import HasSignupPermission, HasCustomerPermission, HasContractPermission, HasEventPermission
+from .filters import CustomerFilters
 
 
 logger = logging.getLogger(__name__)
@@ -43,8 +46,10 @@ class CustomerView(ModelViewSet):
     serializer_class = CustomerSerializer
     queryset = Customer.objects.all()
     # permission_classes = [IsAuthenticated, HasCustomerPermission]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['^company_name']
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    # filterset_class = CustomerFilters
+    filterset_fields = ['company_name', 'email']
+    search_fields = ['company_name', 'email']
 
     def list(self, request, *args, **kwargs):
         queryset = Customer.objects.all()
@@ -90,8 +95,8 @@ class ContractView(ModelViewSet):
     serializer_class = ContractSerializer
     queryset = Contract.objects.all()
     # permission_classes = [IsAuthenticated, HasContractPermission]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['^date_created']
+    # filter_backends = [filters.SearchFilter]
+    # search_fields = ['^date_created']
 
     def list(self, request, *args, **kwargs):
         queryset = Contract.objects.all()
@@ -108,14 +113,18 @@ class ContractView(ModelViewSet):
         return Response(status=status.errors)
 
     def update(self, request, *args, **kwargs):
-        contract = get_object_or_404(Contract, id=kwargs['pk'])
-        self.check_object_permissions(self.request, contract)
-        serializer = self.serializer_class(contract, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            logger.info(f"Le contrat a été modifié par {request.user}.")
-            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            contract = Contract.objects.get(id=kwargs['pk'])
+            self.check_object_permissions(self.request, contract)
+            serializer = self.serializer_class(contract, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                logger.info(f"Le contrat a été modifié par {request.user}.")
+                return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist as e:
+            logger.exception(f"Une exception a été levé : {e}")
+            return Response("Le contrat a mettre à jour n'existe pas")
 
     def destroy(self, request, *args, **kwargs):
         contract = get_object_or_404(Contract, id=kwargs['pk'])
@@ -135,8 +144,8 @@ class EventView(ModelViewSet):
     serializer_class = EventSerializer
     queryset = Event.objects.all()
     # permission_classes = [IsAuthenticated, HasEventPermission]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['^event_date']
+    # filter_backends = [filters.SearchFilter]
+    # search_fields = ['^event_date']
 
     def list(self, request, *args, **kwargs):
         queryset = Event.objects.all()
@@ -144,12 +153,26 @@ class EventView(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            logger.info(f"L'événement a été crée par {request.user}.")
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(status=status.errors)
+        try:
+            contract = Contract.objects.get(id=request.data['contract'])
+            if contract.is_signed:
+                serializer = self.serializer_class(data=request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    logger.info(f"L'événement a été crée par {request.user}.")
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(status=serializer.errors)
+            else:
+                return Response("L'événement ne peut pas etre créé car le contrat n'est pas signé")
+        except ObjectDoesNotExist as e:
+            logger.exception(f"Une exception a été levé : {e}")
+            return Response("Le contrat pour cet événement n'existe pas")
+        # serializer = self.serializer_class(data=request.data)
+        # if serializer.is_valid():
+        #     serializer.save()
+        #     logger.info(f"L'événement a été crée par {request.user}.")
+        #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # return Response(status=serializer.errors)
 
     def update(self, request, *args, **kwargs):
         event = get_object_or_404(Event, id=kwargs['pk'])

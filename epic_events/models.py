@@ -18,10 +18,6 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-    # def admin_connection(self):
-    #     if self.role == 'Managements':
-    #         return True
-
 
 class Customer(models.Model):
     first_name = models.CharField(max_length=25)
