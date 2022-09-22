@@ -35,8 +35,8 @@ class Customer(models.Model):
 
 
 class Contract(models.Model):
-    sales_contact = models.ForeignKey(User, on_delete=models.CASCADE)
-    client = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    sales_contact = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contract')
+    client = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='contract')
     is_signed = models.BooleanField(default=False)
     amount = models.FloatField()
     payment_due = models.DateField(blank=True, null=True)
@@ -55,10 +55,10 @@ class StatusEvent(models.Model):
 
 
 class Event(models.Model):
-    client = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    support_contact = models.ForeignKey(User, on_delete=models.CASCADE)
-    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
-    event_status = models.ForeignKey(StatusEvent, on_delete=models.CASCADE)
+    client = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='event')
+    support_contact = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event')
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='event')
+    event_status = models.ForeignKey(StatusEvent, on_delete=models.CASCADE, related_name='event')
     attendees = models.IntegerField(default=0)
     notes = models.TextField(max_length=2500, null=True, blank=True)
     event_date = models.DateField()

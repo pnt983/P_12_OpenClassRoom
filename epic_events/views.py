@@ -3,15 +3,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
-from rest_framework import status, filters
+from rest_framework import status
 import logging
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .serializers import SignupUserSerializer, CustomerSerializer, ContractSerializer, EventSerializer
 from .models import User, Customer, Contract, Event
 from .permissions import HasSignupPermission, HasCustomerPermission, HasContractPermission, HasEventPermission
-from .filters import CustomerFilters
-
+from .filters import CustomerFilters, ContractFilters, EventFilters
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -46,16 +45,8 @@ class CustomerView(ModelViewSet):
     serializer_class = CustomerSerializer
     queryset = Customer.objects.all()
     # permission_classes = [IsAuthenticated, HasCustomerPermission]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    # filterset_class = CustomerFilters
-    filterset_fields = ['company_name', 'email']
-    search_fields = ['company_name', 'email']
-
-    def list(self, request, *args, **kwargs):
-        queryset = Customer.objects.all()
-        serializer = self.serializer_class(queryset, many=True)
-        logger.debug('Test du logging')
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = CustomerFilters
 
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
@@ -95,13 +86,8 @@ class ContractView(ModelViewSet):
     serializer_class = ContractSerializer
     queryset = Contract.objects.all()
     # permission_classes = [IsAuthenticated, HasContractPermission]
-    # filter_backends = [filters.SearchFilter]
-    # search_fields = ['^date_created']
-
-    def list(self, request, *args, **kwargs):
-        queryset = Contract.objects.all()
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ContractFilters
 
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
@@ -144,13 +130,8 @@ class EventView(ModelViewSet):
     serializer_class = EventSerializer
     queryset = Event.objects.all()
     # permission_classes = [IsAuthenticated, HasEventPermission]
-    # filter_backends = [filters.SearchFilter]
-    # search_fields = ['^event_date']
-
-    def list(self, request, *args, **kwargs):
-        queryset = Event.objects.all()
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = EventFilters
 
     def create(self, request, *args, **kwargs):
         try:
@@ -167,12 +148,6 @@ class EventView(ModelViewSet):
         except ObjectDoesNotExist as e:
             logger.exception(f"Une exception a été levé : {e}")
             return Response("Le contrat pour cet événement n'existe pas")
-        # serializer = self.serializer_class(data=request.data)
-        # if serializer.is_valid():
-        #     serializer.save()
-        #     logger.info(f"L'événement a été crée par {request.user}.")
-        #     return Response(serializer.data, status=status.HTTP_201_CREATED)
-        # return Response(status=serializer.errors)
 
     def update(self, request, *args, **kwargs):
         event = get_object_or_404(Event, id=kwargs['pk'])
