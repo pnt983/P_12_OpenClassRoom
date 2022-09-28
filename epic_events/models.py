@@ -23,7 +23,7 @@ class Customer(models.Model):
     first_name = models.CharField(max_length=25)
     last_name = models.CharField(max_length=25)
     company_name = models.CharField(max_length=250)
-    email = models.EmailField(max_length=100, unique=True)
+    email = models.EmailField(max_length=100)
     phoneNumber = models.CharField(max_length=10, blank=True)
     is_client = models.BooleanField(default=False)
     date_created = models.DateTimeField(auto_now_add=True)

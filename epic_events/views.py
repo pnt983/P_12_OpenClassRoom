@@ -44,7 +44,7 @@ class SignupUserView(ModelViewSet):
 class CustomerView(ModelViewSet):
     serializer_class = CustomerSerializer
     queryset = Customer.objects.all()
-    # permission_classes = [IsAuthenticated, HasCustomerPermission]
+    permission_classes = [IsAuthenticated, HasCustomerPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_class = CustomerFilters
 
@@ -58,12 +58,13 @@ class CustomerView(ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         customer = get_object_or_404(Customer, id=kwargs['pk'])
+        logger.debug(f"request_id : {request.user.id}, sale_contact_id : {customer.sales_contact.id}")
+        logger.debug(f"request : {request.user}, sale_contact : {customer.sales_contact}")
         self.check_object_permissions(self.request, customer)
         serializer = self.serializer_class(customer, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            logger.info(f"Les informations de la compagnie {customer.company_name} ont \
-                        été mis à jour par {request.user}.")
+            logger.info(f"Les informations de la compagnie {customer.company_name} ont été mis à jour par {request.user}.")
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -85,7 +86,7 @@ class CustomerView(ModelViewSet):
 class ContractView(ModelViewSet):
     serializer_class = ContractSerializer
     queryset = Contract.objects.all()
-    # permission_classes = [IsAuthenticated, HasContractPermission]
+    permission_classes = [IsAuthenticated, HasContractPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_class = ContractFilters
 
@@ -129,7 +130,7 @@ class ContractView(ModelViewSet):
 class EventView(ModelViewSet):
     serializer_class = EventSerializer
     queryset = Event.objects.all()
-    # permission_classes = [IsAuthenticated, HasEventPermission]
+    permission_classes = [IsAuthenticated, HasEventPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_class = EventFilters
 
@@ -142,18 +143,19 @@ class EventView(ModelViewSet):
                     serializer.save()
                     logger.info(f"L'événement a été crée par {request.user}.")
                     return Response(serializer.data, status=status.HTTP_201_CREATED)
-                return Response(status=serializer.errors)
+                return Response(serializer.errors)
             else:
-                return Response("L'événement ne peut pas etre créé car le contrat n'est pas signé")
+                return Response("Le contrat doit être signé pour pouvoir créer un événement",
+                                status=status.HTTP_417_EXPECTATION_FAILED)
         except ObjectDoesNotExist as e:
             logger.exception(f"Une exception a été levé : {e}")
-            return Response("Le contrat pour cet événement n'existe pas")
+            return Response("Le contrat pour cet événement n'existe pas", status=status.HTTP_404_NOT_FOUND)
 
     def update(self, request, *args, **kwargs):
         event = get_object_or_404(Event, id=kwargs['pk'])
         self.check_object_permissions(self.request, event)
         serializer = self.serializer_class(event, data=request.data, partial=True)
-        if serializer:
+        if serializer.is_valid():
             serializer.save()
             logger.info(f"L'événement a été modifié par {request.user}.")
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
