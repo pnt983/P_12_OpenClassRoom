@@ -19,7 +19,7 @@ class CustomerSerializer(ModelSerializer):
 
     class Meta:
         model = Customer
-        fields = ['first_name', 'last_name', 'company_name', 'email', 'phoneNumber', 'sales_contact']
+        fields = ['first_name', 'last_name', 'company_name', 'email', 'phone_number', 'sales_contact']
 
 
 class ContractSerializer(ModelSerializer):
