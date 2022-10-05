@@ -4,15 +4,10 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
 
-    role = [('Management', 'Management'),
-            ('Sale', 'Sale'),
+    role = [('Manager', 'Manager'),
+            ('Vendeur', 'Vendeur'),
             ('Support', 'Support')]
 
-    first_name = models.CharField(max_length=25)
-    last_name = models.CharField(max_length=25)
-    username = models.CharField(max_length=60, unique=True)
-    password = models.CharField(max_length=250)
-    is_staff = models.BooleanField(default=False)
     role = models.CharField(max_length=25, choices=role)
 
     def __str__(self):
